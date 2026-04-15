@@ -2,3 +2,5 @@
 *.exe
 compile_flags.txt
 makefile
+*.INP
+*.OUT
