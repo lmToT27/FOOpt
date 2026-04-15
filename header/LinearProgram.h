@@ -13,7 +13,8 @@ public:
     bool IsUnitVector(int col) const;
     void Pivot(int pivot_row, int pivot_col, bool phase1 = true);
     void Simplex(bool phase1 = true);
-    void Solve();
+    virtual void Solve();
+    virtual void PrintSolution();
 private:
     int n, m;
     vector <vector <double>> A;

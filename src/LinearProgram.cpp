@@ -3,20 +3,13 @@
 using namespace std;
 
 void LinearProgram::Input() {
-    cerr << "Enter the number of variables and constraints: ";
     try {
         cin >> n >> m;
         if (cin.fail() || n <= 0 || m <= 0) {
             throw invalid_argument("Invalid input. Please enter positive integers.");
         }
 
-        cerr << "Enter the coefficients of the objective function:\n";
-        for (int j = 0; j < n; j++) {
-            cerr << setw(6) << ("x" + to_string(j));
-        }
-        cerr << "\n";
         target.resize(n);
-        cerr << setw(4) << " ";
         for (double &x : target) {
             cin >> x;
             if (cin.fail()) {
@@ -25,15 +18,7 @@ void LinearProgram::Input() {
         }
 
         A.resize(m + 1, vector <double> (n + m + 1));
-        cerr << "Enter the coefficient matrix:\n";
-        cerr << setw(6) << " ";
-        for (int j = 0; j < n; j++) {
-            cerr << setw(6) << ("x" + to_string(j));
-        }
-        cerr << setw(8) << "RHS" << '\n';
-        cerr << string((n + 1) * 8 + 2, '-') << '\n';
         for (int i = 0; i < m; i++) {
-            cerr << setw(4) << i << " | ";
             A[i][n + i] = 1.0;
             for (int j = 0; j <= n; j++) {
                 double x; cin >> x;
@@ -61,6 +46,37 @@ void LinearProgram::Input() {
     } catch (const invalid_argument& e) {
         cerr << "Error: " << e.what() << endl;
     }
+
+    int COLWIDTH = 15;
+
+    auto print_term = [&](double val, int var_idx) {
+        if (abs(val) < eps) {
+            cerr << string(COLWIDTH, ' ');
+        } else {
+            ostringstream oss;
+            if (val > 0) {
+                oss << "+";
+            }
+            oss << fixed << setprecision(2) << val << " * x" << var_idx;
+            cerr << left << setw(COLWIDTH) << oss.str();
+        }
+    };
+
+    cerr << "Maximize:\n";
+    for (int i = 0; i < n; i++) {
+        print_term(target[i], i);
+    }
+
+    cerr << "\nConstraints:\n";
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            print_term(A[i][j], j);
+        }
+        // Giữ nguyên vế phải của phương trình
+        cerr << " = " << fixed << setprecision(2) << A[i][n + m] << '\n';
+    }
+    cerr << "\n\n";
+    exit(0);
 }
 void LinearProgram::PrintCoeffMat(bool phase1) const {
     int COLWIDTH = 15;
@@ -219,6 +235,8 @@ void LinearProgram::Solve() {
     PrintCoeffMat(false);
     cerr << "\n\n";
     Simplex(false);
+}
+void LinearProgram::PrintSolution() {
     cerr << "Optimal value: " << A[m][n] << '\n';
     cerr << "Optimal solution:\n";
     for (int i = 0; i < n; i++) {
