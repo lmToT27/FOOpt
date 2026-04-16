@@ -147,10 +147,7 @@ bool LinearProgram::Simplex(bool phase1) {
                 pivot_row = i;
             }
         }
-        if (pivot_row == -1) {
-            cout << "Unbounded solution!!!" << endl;
-            return false;
-        }
+        if (pivot_row == -1) return false;
         Pivot(pivot_row, pivot_col, phase1);
         PrintCoeffMat(phase1);
         cerr << "\n\n";
@@ -230,6 +227,7 @@ SolutionState LinearProgram::TwoPhaseMethod() {
             if (A[i][j] == 1) {
                 for (int k = 0; k <= n; k++) {
                     A[m][k] += A[i][k] * target[j];
+                    if (abs(A[m][k]) < eps) A[m][k] = 0;
                 }
                 break;
             }
