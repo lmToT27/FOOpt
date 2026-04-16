@@ -1,4 +1,9 @@
-#include "LinearProgram.h"
+#include "LinearProgram.hpp"
+#include <cassert>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <stdexcept>
 
 using namespace std;
 
@@ -72,11 +77,9 @@ void LinearProgram::Input() {
         for (int j = 0; j < n; j++) {
             print_term(A[i][j], j);
         }
-        // Giữ nguyên vế phải của phương trình
         cerr << " = " << fixed << setprecision(2) << A[i][n + m] << '\n';
     }
     cerr << "\n\n";
-    exit(0);
 }
 void LinearProgram::PrintCoeffMat(bool phase1) const {
     int COLWIDTH = 15;
@@ -126,7 +129,7 @@ bool LinearProgram::IsUnitVector(int col) const {
     }
     return ok;
 }
-void LinearProgram::Simplex(bool phase1) {
+bool LinearProgram::Simplex(bool phase1) {
     while (true) {
         int pivot_col = -1;
         for (int i = 0; i < n + (phase1 ? m : 0); i++) if (A[m][i] < 0) {
@@ -145,23 +148,23 @@ void LinearProgram::Simplex(bool phase1) {
             }
         }
         if (pivot_row == -1) {
-            cerr << "Unbounded solution!!!" << endl;
-            exit(0);
+            cout << "Unbounded solution!!!" << endl;
+            return false;
         }
         Pivot(pivot_row, pivot_col, phase1);
         PrintCoeffMat(phase1);
         cerr << "\n\n";
     }
+    return true;
 }
-void LinearProgram::Solve() {
+
+SolutionState LinearProgram::TwoPhaseMethod() {
     cerr << "PHASE 1:\n\n";
     PrintCoeffMat();
     cerr << "\n\n";
-    Simplex();
-    if (A[m][n + m] < 0) {
-        cerr << "No feasible solution" << '\n';
-        exit(0);
-    }
+    bool checkpoint1 = Simplex();
+    assert(checkpoint1);
+    if (A[m][n + m] < 0) return SolutionState::NoFeasibleSol;
     PrintCoeffMat();
     while (true) {
         int pivot_col = -1;
@@ -175,7 +178,7 @@ void LinearProgram::Solve() {
             pivot_row = i;
             break;
         }
-        // assert(pivot_row != -1);
+        assert(pivot_row != -1);
         int tmp = -1;
         for (int i = 0; i < n; i++) {
             if (A[pivot_row][i] != 0) {
@@ -202,7 +205,7 @@ void LinearProgram::Solve() {
             m--;
         }
     }
-    cerr << "Done Phase 1!!!\n\nPHASE 2:\n\n";
+    cerr << "\nDone Phase 1!!!\n\nPHASE 2:\n\n";
     vector <int> basis;
     for (int i = 0; i < n; i++) {
         if (IsUnitVector(i)) {
@@ -233,12 +236,14 @@ void LinearProgram::Solve() {
         }
     }
     PrintCoeffMat(false);
-    cerr << "\n\n";
-    Simplex(false);
+    cerr << "\nDone Phase 2!!!\n\n";
+    bool checkpoint2 = Simplex(false);
+    if (!checkpoint2) return SolutionState::UnboundedSol;
+    return SolutionState::HasSolution;
 }
 void LinearProgram::PrintSolution() {
-    cerr << "Optimal value: " << A[m][n] << '\n';
-    cerr << "Optimal solution:\n";
+    cout << "Optimal value: " << A[m][n] << '\n';
+    cout << "Optimal solution:\n";
     for (int i = 0; i < n; i++) {
         double val = 0;
         for (int j = 0; j < m; j++) {
@@ -247,8 +252,14 @@ void LinearProgram::PrintSolution() {
                 break;
             }
         }
-        cerr << "x" << i << " = " << val << '\n';
+        cout << "x" << i << " = " << val << '\n';
     }
+}
+void LinearProgram::Solve() {
+    SolutionState state = TwoPhaseMethod();
+    if (state == SolutionState::UnboundedSol) cout << "Unbounded Solution!"; 
+    else if (state == SolutionState::NoFeasibleSol) cout << "No feasible solution!";
+    else PrintSolution();
 }
 /*
     Input co dang:
