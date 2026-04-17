@@ -1,4 +1,4 @@
-#include "LinearProgram.hpp"
+#include "IntLinearProgram.hpp"
 #include <iostream>
 using namespace std;
 
@@ -9,8 +9,8 @@ int main() {
         freopen("TASK.INP", "r", stdin);
         freopen("TASK.OUT", "w", stdout);
     }
-    LinearProgram lp;
-    lp.Input();
-    lp.Solve();
+    IntLinearProgram ilp;
+    ilp.Input();
+    ilp.Solve();
     return 0;
 }

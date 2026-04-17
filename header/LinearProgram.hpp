@@ -19,7 +19,7 @@ public:
     SolutionState TwoPhaseMethod();
     virtual void Solve();
     virtual void PrintSolution();
-private:
+protected:
     int n, m;
     vector <vector <double>> A;
     vector <double> target;

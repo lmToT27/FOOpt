@@ -244,8 +244,8 @@ void LinearProgram::PrintSolution() {
     cout << "Optimal solution:\n";
     for (int i = 0; i < n; i++) {
         double val = 0;
-        for (int j = 0; j < m; j++) {
-            if (A[j][i] == 1 && IsUnitVector(i)) {
+        if (IsUnitVector(i)) for (int j = 0; j < m; j++) {
+            if (A[j][i] == 1) {
                 val = A[j][n];
                 break;
             }
