@@ -3,6 +3,7 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
+#include <cstdint>
 
 bool IntLinearProgram::IsIntSolution() {
     for (int i = 0; i < n; i++) if (IsUnitVector(i)){
@@ -13,7 +14,7 @@ bool IntLinearProgram::IsIntSolution() {
                 break;
             }
         }
-        if (abs(val - (int)val) > eps) return false; 
+        if (abs(val - round(val)) > eps) return false; 
     }
     return true;
 }
@@ -24,7 +25,7 @@ void IntLinearProgram::PrintSolution() {
     for (int i = 0; i < n; i++) {
         int64_t val = 0;
         if (IsUnitVector(i)) for (int j = 0; j < m; j++) {
-            if (A[j][i] == 1) {
+            if (abs(A[j][i] - 1) < eps) {
                 val = A[j][n];
                 break;
             }
@@ -50,13 +51,14 @@ bool IntLinearProgram::DualSimplex() {
         }
         cerr << '\n';
     }
+    cerr << "\n\n";
     while (true) {
         int pivot_row = -1;
         double min_rhs = -eps;
         for (int i = 0; i < m; i++) {
             if (A[i][n] < min_rhs) {
                 min_rhs = A[i][n];
-                pivot_row = -1;
+                pivot_row = i;
             }
         }
         if (pivot_row == -1) break;
@@ -73,12 +75,17 @@ bool IntLinearProgram::DualSimplex() {
         }
         if (pivot_col == -1) return false;
         double val = A[pivot_row][pivot_col];
-        for (int j = 0; j <= n; j++) A[pivot_row][j] /= val;
+        for (int j = 0; j <= n; j++) {
+            A[pivot_row][j] /= val;
+            if (abs(A[pivot_row][j]) < eps) A[pivot_row][j] = 0;
+        }
         for (int i = 0; i <= m; i++) if (i != pivot_row) {
             double f = A[i][pivot_col];
             if (abs(f) > eps) for (int j = 0; j <= n; j++) {
                 A[i][j] -= f * A[pivot_row][j];
-                if (abs(A[i][j]) < eps) A[i][j] = 0;
+                if (abs(A[i][j]) < eps) {
+                    A[i][j] = 0;
+                }
             }
         }
         for (int j = 0; j < n; j++) {
@@ -96,6 +103,7 @@ bool IntLinearProgram::DualSimplex() {
             }
             cerr << '\n';
         }
+        cerr << "\n\n";
     }
     return true;
 }
@@ -120,6 +128,7 @@ void IntLinearProgram::Solve() {
     if (IsIntSolution()) return PrintSolution();
     int ite = 100;
     int real_n = n;
+    cerr << "\nStarting Gomory Cuts...\n\n";
     while ((not IsIntSolution()) and (ite--)) {
         pair <int, int> chose = make_pair(-1, -1);
         double best_f = -1;
@@ -150,15 +159,15 @@ void IntLinearProgram::Solve() {
                 if (f < eps || f > 1 - eps) f = 0;
                 A[m][i] = -f;
             }
+            if (abs(A[m][i]) < eps) A[m][i] = 0;
         }
         m++;
+        cerr << "Gomory Cut: New constraint: ";
+        for (int j = 0; j < n; j++) {
+            print_term(A[m - 1][j], j);
+        }
+        cerr << " = " << fixed << setprecision(2) << A[m - 1][n + m] << "\n\n";
         if (!DualSimplex()) return void(cout << "Cant find integer solution!!!");
-        // cerr << "Gomory Cut: New constraint:\n";
-        //    for (int j = 0; j < n; j++) {
-        //         print_term(A[i][j], j);
-        //   }
-        // cerr << " = " << fixed << setprecision(2) << A[i][n + m] << '\n';
-        // }
     }
     if (not IsIntSolution()) {
         cout << "Cant find integer solution!!!";

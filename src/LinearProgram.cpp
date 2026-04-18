@@ -120,10 +120,10 @@ void LinearProgram::Pivot(int pivot_row, int pivot_col, bool phase1) {
 bool LinearProgram::IsUnitVector(int col) const {
     bool ok = false;
     for (int i = 0; i <= m; i++) {
-        if (A[i][col] == 1) {
+        if (abs(A[i][col] - 1) < eps) {
             if (ok) return false;
             ok = true;
-        } else if (A[i][col] != 0) {
+        } else if (abs(A[i][col]) > eps) {
             return false;
         }
     }
@@ -245,7 +245,7 @@ void LinearProgram::PrintSolution() {
     for (int i = 0; i < n; i++) {
         double val = 0;
         if (IsUnitVector(i)) for (int j = 0; j < m; j++) {
-            if (A[j][i] == 1) {
+            if (abs(A[j][i] - 1) < eps) {
                 val = A[j][n];
                 break;
             }
